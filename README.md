@@ -26,7 +26,7 @@ python3 pm64_to_midi.py bgm_file segment_id midi_file
 * Support for loops
 * Support for MIDI format 0
 
-Additionally, there are currently several BGM commands that can be translated to MIDI are not implemented. These are:
+Additionally, there are currently several BGM commands that can be translated to MIDI that are not implemented. These are:
 * Master volume
 * Master volume fade
 * Master tuning
