@@ -1,6 +1,9 @@
 # pm64-to-midi
  Tool to convert music data from Paper Mario to MIDI
 
+# Rationale
+ N64SoundBankTool doesn't support the commands I want it to so I made this :T
+
 # Dependencies
  This script depends on the [Mido](https://github.com/mido/mido) Python library.
 
