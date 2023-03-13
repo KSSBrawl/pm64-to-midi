@@ -294,7 +294,7 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 			# bank select MSB
 			m_track.append( mido.Message(
 				'control_change', channel = track.channel, control = 0, value = e.value, time = event_time ) )
-				
+
 			m_track.append( mido.Message(
 				'program_change', channel = track.channel, program = e.program, time = 0 ) )
 		elif e.type == EventTypes.WHEEL:
@@ -310,7 +310,7 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 def main():
 	if len( sys.argv ) != 4:
-		sys.exit( 'Usage: pm64_to_midi.py bin_file segment_id midi_file' )
+		sys.exit( 'Usage: pm64_to_midi.py bgm_file segment_id midi_file' )
 
 	bin_f = open( sys.argv[1], 'rb' )
 	mid_f = mido.MidiFile( type = 1 )
