@@ -534,9 +534,10 @@ def main():
 		handle_tempo_fades( bin_f, parser, i )
 		track.sort_events_by_time()
 		
-		m_track = mido.MidiTrack()
-		mid_f.tracks.append( m_track )
-		track2midi( track, m_track )
+		if len( track.events ) != 0:
+			m_track = mido.MidiTrack()
+			mid_f.tracks.append( m_track )
+			track2midi( track, m_track )
 
 	mid_f.save( args.out_file )
 
