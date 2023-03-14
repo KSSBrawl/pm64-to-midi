@@ -145,6 +145,7 @@ class ParserTrack:
 		self.fine_tune		= 0
 		self.track_tune		= 0
 		self.patch_bank		= 0
+		self.patch			= None
 
 	def sort_events_by_time( self ) -> None:
 		self.events.sort( key = lambda x: x.time )
@@ -253,6 +254,9 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bo
 				length = ( ( length & ~0xc0 ) << 8 ) + b2 + 0xc0
 
 			if is_drum:
+				if track.patch != drum_map[note][1]:
+					track.patch = drum_map[note][1]
+					track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, 0, track.patch ) )
 				note = drum_map[note][0]
 
 			track.events.append( ParserEvent( EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
@@ -291,10 +295,11 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bo
 			# TODO: implement
 		# track patch+bank set
 		elif cmd == 0xe8:
-			param1 = read_int( f, 1, False )
-			param2 = read_int( f, 1, False )
-			track.patch_bank = param1
-			track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
+			if not is_drum:
+				param1 = read_int( f, 1, False )
+				param2 = read_int( f, 1, False )
+				track.patch_bank = param1
+				track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
 		# subtrack volume
 		elif cmd == 0xe9:
 			param1 = read_int( f, 1, False )
