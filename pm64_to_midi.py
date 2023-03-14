@@ -230,7 +230,7 @@ class ParserEvent:
 class ParserTrack:
 	def __init__( self, channel: int ):
 		self.events			: List[ParserEvent] = []
-		self.detour_remain	= -1
+		self.detour_remain	= 0
 		self.ret_pos		= 0
 		self.time_at		= 0
 		self.channel		= channel
@@ -265,10 +265,8 @@ def read_int( f: BinaryIO, width: int, signed: bool ) -> int:
 def handle_detour( f: BinaryIO, track: ParserTrack ) -> None:
 	if track.detour_remain > 0:
 		track.detour_remain -= 1
-
-	if track.detour_remain == 0:
-		f.seek( track.ret_pos )
-		track.detour_remain = -1
+		if track.detour_remain == 0:
+			f.seek( track.ret_pos )
 
 #-----------------------------------------------------------
 
@@ -508,7 +506,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 			param3 = read_int( f, 1, False )
 			# TODO: implement
 
-		if cmd >= 0xe0:
+		if cmd >= 0xe0 and cmd != 0xfe:
 			for i in range( cmd_len_table[cmd - 0xe0] ):
 				handle_detour( f, track )
 
