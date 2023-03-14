@@ -24,7 +24,7 @@ python3 pm64_to_midi.py [-h] [-t] -i bgm_file -s segment -o midi_file
 * More robust error handling
 * Support for loops
 * Support for MIDI format 0
-* Support for automatic patch translation (mapping patches to the appropriate MIDI patch)
+* Support for automatic patch translation (mapping patch events to the appropriate MIDI patch)
 
 Additionally, there are currently several BGM commands that can be translated to MIDI that are not implemented. These are:
 * Master volume
