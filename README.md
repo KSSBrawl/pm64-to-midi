@@ -21,7 +21,6 @@ python3 pm64_to_midi.py [-h] [-t] -i bgm_file -s segment -o midi_file
 
 # Current completion status
  There are some features that will be added in the future, including:
-* Only outputting the number of tracks the song uses (I was too lazy to do this for the initial version)
 * More robust error handling
 * Support for loops
 * Support for MIDI format 0
