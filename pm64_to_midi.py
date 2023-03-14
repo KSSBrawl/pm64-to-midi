@@ -8,10 +8,10 @@ PITCH_STEP_COARSE	= 8192 / 24
 PITCH_STEP_FINE		= PITCH_STEP_COARSE / 100
 
 cmd_len_table = [
-    2, 1, 1, 1, 4, 3, 2, 0,
-    2, 1, 1, 1, 1, 1, 1, 2,
-    3, 1, 1, 0, 2, 1, 3, 1,
-    0, 0, 0, 0, 3, 3, 3, 3
+	2, 1, 1, 1, 4, 3, 2, 0,
+	2, 1, 1, 1, 1, 1, 1, 2,
+	3, 1, 1, 0, 2, 1, 3, 1,
+	0, 0, 0, 0, 3, 3, 3, 3
 ]
 
 class EventTypes( Enum ):
@@ -22,6 +22,98 @@ class EventTypes( Enum ):
 	WHEEL		= 4
 	TEMPO		= 5
 	TEMPO_FADE	= 6
+
+#-----------------------------------------------------------
+
+drum_ex_map = {
+	0x9a: ( 36, 30 ), # 909 K1
+	0x9b: ( 38, 30 ), # 909 S2
+	0x9c: ( 45, 30 ), # 909 Mid2
+	0x9d: ( 38,  0 ), # Std.1 S1
+	0x9e: ( 36, 41 ), # Jazz K1
+	0x9f: ( 38, 41 ), # B.Tap 1
+
+	0xb0: ( 36,  0 ), # Std.1 K1
+	0xb1: ( 38,  0 ), # Std.1 S1
+	0xb2: ( 40,  0 ), # Std.1
+	0xb3: ( 42,  0 ), # C.Hi-Hat
+	0xb4: ( 44,  0 ), # P.Hi-Hat
+	0xb5: ( 46,  0 ), # O.Hi-Hat
+	0xb6: ( 49,  0 ), # CrshCym1
+	0xb7: ( 57,  0 ), # CrshCym2
+	0xb8: ( 50,  0 ), # Hi.Tom 1
+	0xb9: ( 48,  0 ), # Hi.Tom 2
+	0xba: ( 47,  0 ), # MidTom 1
+	0xbb: ( 45,  0 ), # MidTom 2
+	0xbc: ( 43,  0 ), # LowTom 1
+	0xbd: ( 41,  0 ), # LowTom 2
+	0xbe: ( 51,  0 ), # RideCym1
+	0xbf: ( 53,  0 ), # RideBell
+	0xc0: ( 36, 48 ), # Con.BD 1
+	0xc1: ( 38, 48 ), # Con.SD
+	0xc2: ( 59, 48 ), # Con.Cym1
+	0xc3: ( 35, 26 ), # 909 CmpK
+	0xc4: ( 36, 26 ), # Elec.K2
+	0xc5: ( 38, 26 ), # House SD
+
+	0xc7: ( 36,  8 ), # Room K1
+	0xc8: ( 38,  8 ), # Room S1
+	0xc9: ( 35, 25 ), # 808 BD2
+	0xca: ( 36, 25 ), # 808 BD
+	0xcb: ( 38, 25 ), # 808 S1
+	0xcc: ( 40, 25 ), # 808 S1
+	0xcd: ( 42, 25 ), # 808 CHH2
+	0xce: ( 46, 25 ), # 808 OHH
+
+	0xd0: ( 61,  0 ), # LowBongo
+	0xd1: ( 60,  0 ), # Hi.Bongo
+	0xd2: ( 79,  0 ), # Op.Cuica
+	0xd3: ( 78,  0 ), # Mt.Cuica
+	0xd4: ( 54,  0 ), # Tambourn
+	0xd5: ( 81,  0 ), # Op.Trigl
+	0xd6: ( 63,  0 ), # OH Conga
+	0xd7: ( 64,  0 ), # LowConga
+	0xd8: ( 62,  0 ), # MH Conga
+	0xd9: ( 65,  0 ), # Hi.Timbl
+	0xda: ( 66,  0 ), # LowTimbl
+	0xdb: ( 74,  0 ), # L.Guiro
+	0xdc: ( 73,  0 ), # S.Guiro
+	0xdd: ( 82,  0 ), # Shaker
+	0xde: ( 70,  0 ), # Maracas
+	0xdf: ( 45,  0 ), # MidTom 2
+	0xe0: ( 75,  0 ), # Claves
+	0xe1: ( 56,  0 ), # Cowbell
+	0xe2: ( 67,  0 ), # Hi.Agogo
+	0xe3: ( 68,  0 ), # LowAgogo
+	0xe4: ( 76,  0 ), # Hi.W.Blk
+	0xe5: ( 77,  0 ), # LowW.Blk
+	0xe6: ( 72,  0 ), # LL.Whisl
+	0xe7: ( 71,  0 ), # Sh.Whisl
+
+	0xe9: ( 39, 24 ), # HandClap
+	0xea: ( 39,  0 ), # 909 Clap
+	0xeb: ( 31,  0 ), # Sticks
+	0xec: ( 37,  0 ), # Sd.Stick
+	0xed: ( 58,  0 ), # Vib-slap
+
+	0xef: ( 25,  0 ), # Snr.Roll
+	0xf0: ( 41, 25 ), # 808 LT2
+	0xf1: ( 43, 25 ), # 808 LT1
+	0xf2: ( 45, 25 ), # 808 MT2
+	0xf3: ( 47, 25 ), # 808 MT1
+	0xf4: ( 48, 25 ), # 808 HT2
+	0xf5: ( 50, 25 ), # 808 HT1
+	0xf6: ( 55, 56 ), # HeartBt.
+	0xf7: ( 84,  0 ), # BellTree
+	0xf8: ( 83,  0 ), # Jng.Bell
+	0xf9: ( 52,  0 ), # Chin.Cym
+	0xfa: ( 87,  0 ), # Op.Surdo
+	0xfb: ( 86,  0 ), # Mt.Surdo
+	0xfc: ( 38, 16 ), # Power S1
+	0xfd: ( 36, 16 ), # Power K1
+	0xfe: ( 45, 16 ), # PowMTom2
+	0xff: ( 36,  0 )  # Std.1 K1
+}
 
 #-----------------------------------------------------------
 
@@ -99,8 +191,6 @@ drum_map = {
 	58: ( 37,  0 ), # Sd.Stick
 	59: ( 31,  0 ), # Sticks
 	60: ( 58,  0 ), # Vib-slap
-	# STANDARD 1
-	72: ( 52,  0 ), # Chin.Cym
 }
 
 #-----------------------------------------------------------
@@ -498,6 +588,21 @@ def main():
 	bin_f.seek( 0x14 + ( args.segment << 1 ) )
 	seg_ofs = read_int( bin_f, 2, False ) << 2
 	seg_pos = seg_ofs
+
+	bin_f.seek( 0x1c )
+	drums_ofs = read_int( bin_f, 2, False ) << 2
+	drums_cnt = read_int( bin_f, 2, False )
+
+	bin_f.seek( drums_ofs )
+
+	for i in range( drums_cnt ):
+		# dummy read
+		read_int( bin_f, 1, False )
+		drum_info = drum_ex_map[read_int( bin_f, 1, False )]
+		drum_map[72 + i] = drum_info
+		# dummy read
+		read_int( bin_f, 10, False )
+
 
 	if seg_ofs == 0:
 		sys.exit( 'Requested segment does not exist' )
