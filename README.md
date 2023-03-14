@@ -16,7 +16,6 @@
 
 ```
 python3 pm64_to_midi.py [-h] [-t] -i bgm_file -s segment -o midi_file
-
 ```
 
 # Current completion status
