@@ -491,7 +491,6 @@ def main():
 
 	parser = Parser()
 
-	# TODO: only generate the number of tracks the song uses
 	for i in range( 16 ):
 		parser.add_track()
 
