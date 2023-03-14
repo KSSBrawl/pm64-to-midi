@@ -63,7 +63,7 @@ class ParserTrack:
 		self.coarse_tune	= 0
 		self.fine_tune		= 0
 		self.track_tune		= 0
-		self.tempo			= 120
+		self.tempo			= 156
 		self.patch_bank		= 0
 
 	def sort_events_by_time( self ) -> None:
@@ -122,7 +122,8 @@ def handle_tempo_fades( track: ParserTrack ) -> None:
 						mido.bpm2tempo( track.tempo + ( step * i ) ) ) )
 					
 					occurrence += 1
-				track.events.append( ParserEvent( EventTypes.TEMPO, time + event.fade_time, mido.bpm2tempo( event.target ) ) )
+				track.events.append( ParserEvent( EventTypes.TEMPO, time + event.fade_time,
+					mido.bpm2tempo( event.target ) ) )
 			else:
 				num_events = next_tempo.time - ( event.time + event.fade_time )
 
@@ -307,6 +308,7 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 	delta_time = 0
 
+	# set pitch bend sensitivity to +/-24 semitones
 
 	# RPN MSB
 	m_track.append( mido.Message(
@@ -325,10 +327,12 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 		if   e.type == EventTypes.NOTE_OFF:
 			m_track.append( mido.Message(
-				'note_off', channel = track.channel, note = e.note, velocity = min( 127, e.velocity ), time = event_time ) )
+				'note_off', channel = track.channel, note = e.note,
+				velocity = min( 127, e.velocity ), time = event_time ) )
 		elif e.type == EventTypes.NOTE_ON:
 			m_track.append( mido.Message(
-				'note_on', channel = track.channel, note = e.note, velocity = min( 127, e.velocity ), time = event_time ) )
+				'note_on', channel = track.channel, note = e.note,
+				velocity = min( 127, e.velocity ), time = event_time ) )
 		elif e.type == EventTypes.CC:
 			m_track.append( mido.Message(
 				'control_change', channel = track.channel, control = e.control, value = e.value, time = event_time ) )
