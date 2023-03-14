@@ -414,6 +414,8 @@ def main():
 			bin_f.seek( next_track_pos )
 
 	for track in parser.tracks:
+		handle_tempo_fades( track )
+		
 		m_track = mido.MidiTrack()
 		mid_f.tracks.append( m_track )
 		track2midi( track, m_track )
