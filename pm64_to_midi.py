@@ -25,6 +25,27 @@ class EventTypes( Enum ):
 
 #-----------------------------------------------------------
 
+drum_map = {
+	 0: 36,
+	 1: 38,
+	 2: 40,
+	 3: 42,
+	 4: 44,
+	 5: 46,
+	 6: 50,
+	 7: 48,
+	 8: 47,
+	 9: 45,
+	10: 43,
+	11:	41,
+	12: 49,
+
+	24: 65,
+	25: 66,
+}
+
+#-----------------------------------------------------------
+
 class ParserEvent:
 	def __init__( self, event_type: int, offset: int, time: int, param1: int, param2: int = None ):
 		self.type = event_type
@@ -111,8 +132,9 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 
 		if event.type == EventTypes.TEMPO_FADE:
 			next_tempo = None
+
 			try:
-				next_tempo = [i for i, e in enumerate( track.events ) if e.type == EventTypes.TEMPO][occurrence]
+				next_tempo = [e[1] for e in enumerate( track.events ) if e[1].type == EventTypes.TEMPO][occurrence]
 			except IndexError:
 				pass
 
@@ -125,19 +147,17 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 
 			if next_tempo == None:
 				for i in range( event.fade_time ):
-					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
-						mido.bpm2tempo( tempo + ( step * i ) ) ) )
-					
+					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i, tempo + ( step * i ) ) )
 					occurrence += 1
-				track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + event.fade_time,
-					mido.bpm2tempo( event.target ) ) )
+					
+				track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + event.fade_time, event.target ) )
+				occurrence += 1
 			else:
-				num_events = next_tempo.time - ( event.time + event.fade_time )
+				num_events = next_tempo.time - event.time
+				print( num_events )
 
 				for i in range( num_events ):
-					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
-						mido.bpm2tempo( tempo - ( step * i ) ) ) )
-					
+					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i, tempo - ( step * i ) ) )
 					occurrence += 1
 
 #-----------------------------------------------------------
@@ -432,6 +452,7 @@ def main():
 	for i in range( 16 ):
 		track = parser.tracks[i]
 		handle_tempo_fades( bin_f, parser, i )
+		track.sort_events_by_time()
 		
 		m_track = mido.MidiTrack()
 		mid_f.tracks.append( m_track )
