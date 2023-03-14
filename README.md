@@ -15,9 +15,9 @@
  Once you have the BGM files, run the script like so:
 
 ```
-python3 pm64_to_midi.py bgm_file segment_id midi_file
+python3 pm64_to_midi.py [-h] [-t] -i bgm_file -s segment -o midi_file
+
 ```
- where `segment_id` is a number from 0-3.
 
 # Current completion status
  There are some features that will be added in the future, including:

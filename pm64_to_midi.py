@@ -1,4 +1,4 @@
-import mido, sys
+import mido, sys, argparse
 from enum import Enum
 from typing import List, BinaryIO
 
@@ -26,22 +26,81 @@ class EventTypes( Enum ):
 #-----------------------------------------------------------
 
 drum_map = {
-	 0: 36,
-	 1: 38,
-	 2: 40,
-	 3: 42,
-	 4: 44,
-	 5: 46,
-	 6: 50,
-	 7: 48,
-	 8: 47,
-	 9: 45,
-	10: 43,
-	11:	41,
-	12: 49,
-
-	24: 65,
-	25: 66,
+	# STANDARD 1
+	 0: ( 36,  0 ),
+	 1: ( 38,  0 ),
+	 2: ( 40,  0 ),
+	 3: ( 42,  0 ),
+	 4: ( 44,  0 ),
+	 5: ( 46,  0 ),
+	 6: ( 50,  0 ),
+	 7: ( 48,  0 ),
+	 8: ( 47,  0 ),
+	 9: ( 45,  0 ),
+	10: ( 43,  0 ),
+	11:	( 41,  0 ),
+	12: ( 49,  0 ),
+	13: ( 57,  0 ),
+	14: ( 61,  0 ),
+	15: ( 60,  0 ),
+	16: ( 79,  0 ),
+	17: ( 78,  0 ),
+	18: ( 54,  0 ),
+	19: ( 81,  0 ),
+	20: ( 80,  0 ),
+	21: ( 63,  0 ),
+	22: ( 64,  0 ),
+	23: ( 62,  0 ),
+	24: ( 65,  0 ),
+	25: ( 66,  0 ),
+	26: ( 74,  0 ),
+	27: ( 73,  0 ),
+	# ORCHESTRA
+	28: ( 36, 48 ),
+	29: ( 38, 48 ),
+	# TR-808
+	30: ( 35, 25 ),
+	31: ( 36, 25 ),
+	32: ( 38, 25 ),
+	33: ( 40, 25 ),
+	34: ( 42, 25 ),
+	35: ( 46, 25 ),
+	# STANDARD 1
+	36: ( 51,  0 ),
+	37: ( 53,  0 ),
+	# ROOM
+	38: ( 36,  8 ),
+	39: ( 36,  8 ),
+	40: ( 38,  8 ),
+	# DANCE
+	41: ( 35, 26 ),
+	42: ( 36, 26 ),
+	43: ( 38, 26 ),
+	# STANDARD 1
+	44: ( 69,  0 ),
+	# unknown
+	45: ( 26,  0 ),
+	# STANDARD 1
+	46: ( 75,  0 ),
+	47: ( 56,  0 ),
+	48: ( 67,  0 ),
+	49: ( 68,  0 ),
+	50: ( 76,  0 ),
+	51: ( 77,  0 ),
+	52: ( 72,  0 ),
+	53: ( 71,  0 ),
+	54: ( 82,  0 ),
+	55: ( 70,  0 ),
+	# ELECTRONIC
+	56: ( 39, 24 ),
+	# STANDARD 1
+	57: ( 39,  0 ),
+	58: ( 37,  0 ),
+	59: ( 31,  0 ),
+	60: ( 58,  0 ),
+	# 61-71 appear unused
+	# STANDARD 1
+	72: ( 52,  0 )
 }
 
 #-----------------------------------------------------------
@@ -162,7 +221,7 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 
 #-----------------------------------------------------------
 
-def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int ) -> None:
+def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bool ) -> None:
 	track = parser.tracks[track_num]
 
 	offset = f.tell()
@@ -192,6 +251,9 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 				b2 = read_int( f, 1, False )
 				handle_detour( f, track )
 				length = ( ( length & ~0xc0 ) << 8 ) + b2 + 0xc0
+
+			if is_drum:
+				note = drum_map[note][0]
 
 			track.events.append( ParserEvent( EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
 			track.events.append( ParserEvent( EventTypes.NOTE_OFF, offset, track.time_at + length, note, vel ) )
@@ -385,20 +447,37 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 #-----------------------------------------------------------
 
 def main():
-	if len( sys.argv ) != 4:
-		sys.exit( 'Usage: pm64_to_midi.py bgm_file segment_id midi_file' )
+	args = argparse.ArgumentParser()
 
-	bin_f = open( sys.argv[1], 'rb' )
+	args.add_argument(
+		'-t', '--translate_drums',
+		action = 'store_true',
+		help = 'translate drum mapping to GS drum mapping' )
+	args.add_argument(
+		'-i', '--in',
+		dest = 'in_file',
+		help = 'BGM file name',
+		required = True )
+	args.add_argument(
+		'-s', '--segment',
+		dest = 'segment',
+		type = int,
+		choices = range(0, 4),
+		help = 'segment ID (0-3)',
+		required = True )
+	args.add_argument(
+		'-o', '--out',
+		dest = 'out_file',
+		help = 'MIDI file name',
+		required = True )
+
+	args = args.parse_args()
+
+	bin_f = open( args.in_file, 'rb' )
 	mid_f = mido.MidiFile( type = 1 )
 	mid_f.ticks_per_beat = 48
 
-	# get offset of desired segment (if present)
-	seg_num = int( sys.argv[2], 10 )
-
-	if seg_num < 0 or seg_num > 3:
-		sys.exit( 'Only segment IDs 0-3 are valid' )
-
-	bin_f.seek( 0x14 + ( seg_num << 1 ) )
+	bin_f.seek( 0x14 + ( args.segment << 1 ) )
 	seg_ofs = read_int( bin_f, 2, False ) << 2
 	seg_pos = seg_ofs
 
@@ -435,8 +514,9 @@ def main():
 			track = parser.tracks[i]
 
 			track_ofs = read_int( bin_f, 2, False ) + sub_ofs
-			# dummy read to skip past flags
-			read_int( bin_f, 2, False )
+
+			track_flags = read_int( bin_f, 2, False )
+			is_drum = track_flags & 0x0080 != 0 and args.translate_drums == True	
 
 			if track_ofs == 0:
 				continue
@@ -444,7 +524,7 @@ def main():
 			next_track_pos = bin_f.tell()
 			bin_f.seek( track_ofs )
 
-			parse_subseg_track( bin_f, parser, i )
+			parse_subseg_track( bin_f, parser, i, is_drum )
 			track.sort_events_by_time()
 
 			bin_f.seek( next_track_pos )
@@ -458,7 +538,7 @@ def main():
 		mid_f.tracks.append( m_track )
 		track2midi( track, m_track )
 
-	mid_f.save( sys.argv[3] )
+	mid_f.save( args.out_file )
 
 #-----------------------------------------------------------
 
