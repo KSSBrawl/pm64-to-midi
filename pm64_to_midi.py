@@ -49,8 +49,8 @@ class ParserEvent:
 		elif event_type == EventTypes.TEMPO:
 			self.tempo = param1
 		elif event_type == EventTypes.TEMPO_FADE:
-			self.target = param1
-			self.fade_time = param2
+			self.fade_time = param1
+			self.target = param2
 
 #-----------------------------------------------------------
 
@@ -64,7 +64,6 @@ class ParserTrack:
 		self.coarse_tune	= 0
 		self.fine_tune		= 0
 		self.track_tune		= 0
-		self.tempo			= 156
 		self.patch_bank		= 0
 
 	def sort_events_by_time( self ) -> None:
@@ -98,12 +97,16 @@ def handle_detour( f: BinaryIO, track: ParserTrack ) -> None:
 
 #-----------------------------------------------------------
 
-def handle_tempo_fades( f: BinaryIO, track: ParserTrack ) -> None:
+def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
+	track = parser.tracks[track_num]
+	tempo = 156
+
 	# number of tempo events encountered+generated so far
 	occurrence = 0
 
 	for event in track.events:
 		if event.type == EventTypes.TEMPO:
+			tempo = event.tempo
 			occurrence += 1
 
 		if event.type == EventTypes.TEMPO_FADE:
@@ -116,14 +119,14 @@ def handle_tempo_fades( f: BinaryIO, track: ParserTrack ) -> None:
 			time = event.time
 
 			try:
-				step = int( ( event.target - track.tempo ) / event.fade_time )
+				step = int( ( event.target - tempo ) / event.fade_time )
 			except ZeroDivisionError:
 				sys.exit( "Tempo fade event cannot have fade time of zero (offset = {:08x})".format( event.offset ) )
 
 			if next_tempo == None:
 				for i in range( event.fade_time ):
 					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
-						mido.bpm2tempo( track.tempo + ( step * i ) ) ) )
+						mido.bpm2tempo( tempo + ( step * i ) ) ) )
 					
 					occurrence += 1
 				track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + event.fade_time,
@@ -131,15 +134,17 @@ def handle_tempo_fades( f: BinaryIO, track: ParserTrack ) -> None:
 			else:
 				num_events = next_tempo.time - ( event.time + event.fade_time )
 
-				for i in range( event.fade_time ):
+				for i in range( num_events ):
 					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
-						mido.bpm2tempo( track.tempo - ( step * i ) ) ) )
+						mido.bpm2tempo( tempo - ( step * i ) ) ) )
 					
 					occurrence += 1
 
 #-----------------------------------------------------------
 
-def parse_subseg_track( f: BinaryIO, track: ParserTrack ) -> None:
+def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int ) -> None:
+	track = parser.tracks[track_num]
+
 	offset = f.tell()
 	cmd = read_int( f, 1, False )
 	handle_detour( f, track )
@@ -173,8 +178,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack ) -> None:
 		# master tempo
 		elif cmd == 0xe0:
 			param1 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO, offset, track.time_at, mido.bpm2tempo( param1 ) ) )
-			track.tempo = param1
+			track.events.append( ParserEvent( EventTypes.TEMPO, offset, track.time_at, param1 ) )
 		# master volume
 		elif cmd == 0xe1:
 			param1 = read_int( f, 1, False )
@@ -191,7 +195,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack ) -> None:
 		elif cmd == 0xe4:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, offset, track.time_at, param2, param1 ) )
+			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, offset, track.time_at, param1, param2 ) )
 			# TODO: implement
 		# master volume fade
 		elif cmd == 0xe5:
@@ -354,7 +358,7 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 				'pitchwheel', channel = track.channel, pitch = int( e.pitch ), time = event_time ) )
 		elif e.type == EventTypes.TEMPO:
 			m_track.append( mido.MetaMessage(
-				'set_tempo', tempo = e.tempo, time = event_time ) )
+				'set_tempo', tempo = mido.bpm2tempo( e.tempo ), time = event_time ) )
 
 		delta_time = e.time
 
@@ -407,7 +411,9 @@ def main():
 		sub_ofs += seg_ofs
 		bin_f.seek( sub_ofs )
 
-		for track in parser.tracks:
+		for i in range( 16 ):
+			track = parser.tracks[i]
+
 			track_ofs = read_int( bin_f, 2, False ) + sub_ofs
 			# dummy read to skip past flags
 			read_int( bin_f, 2, False )
@@ -418,13 +424,14 @@ def main():
 			next_track_pos = bin_f.tell()
 			bin_f.seek( track_ofs )
 
-			parse_subseg_track( bin_f, track )
+			parse_subseg_track( bin_f, parser, i )
 			track.sort_events_by_time()
 
 			bin_f.seek( next_track_pos )
 
-	for track in parser.tracks:
-		handle_tempo_fades( bin_f, track )
+	for i in range( 16 ):
+		track = parser.tracks[i]
+		handle_tempo_fades( bin_f, parser, i )
 		
 		m_track = mido.MidiTrack()
 		mid_f.tracks.append( m_track )
