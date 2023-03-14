@@ -462,7 +462,7 @@ def main():
 		'-s', '--segment',
 		dest = 'segment',
 		type = int,
-		choices = range(0, 4),
+		choices = range( 0, 4 ),
 		help = 'segment ID (0-3)',
 		required = True )
 	args.add_argument(

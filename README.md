@@ -25,7 +25,6 @@ python3 pm64_to_midi.py [-h] [-t] -i bgm_file -s segment -o midi_file
 * More robust error handling
 * Support for loops
 * Support for MIDI format 0
-* Mapping notes on percussion channels to their corresponding MIDI notes
 
 Additionally, there are currently several BGM commands that can be translated to MIDI that are not implemented. These are:
 * Master volume
