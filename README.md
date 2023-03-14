@@ -25,12 +25,12 @@ python3 pm64_to_midi.py bgm_file segment_id midi_file
 * More robust error handling
 * Support for loops
 * Support for MIDI format 0
+* Mapping notes on percussion channels to their corresponding MIDI notes
 
 Additionally, there are currently several BGM commands that can be translated to MIDI that are not implemented. These are:
 * Master volume
 * Master volume fade
 * Master tuning
-* Tempo fade
 * Track tremolo
 * Track tremolo speed
 * Track tremolo time
