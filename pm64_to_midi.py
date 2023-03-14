@@ -1,6 +1,6 @@
 import mido, sys
 from enum import Enum
-from io import FileIO
+from typing import List, BinaryIO
 
 #-----------------------------------------------------------
 
@@ -26,19 +26,20 @@ class EventTypes( Enum ):
 #-----------------------------------------------------------
 
 class ParserEvent:
-	def __init__( self, event_type: int, time: int, param1: int, param2: int = None ):
-		self.time = time
+	def __init__( self, event_type: int, offset: int, time: int, param1: int, param2: int = None ):
 		self.type = event_type
+		self.offset = offset
+		self.time = time
 
 		if   event_type == EventTypes.CC:
 			self.control = param1
 			self.value = param2
 		elif event_type == EventTypes.NOTE_OFF:
 			self.note = param1
-			self.velocity = param2
+			self.velocity = min( param2, 127 )
 		elif event_type == EventTypes.NOTE_ON:
 			self.note = param1
-			self.velocity = param2
+			self.velocity = min( param2, 127 )
 		elif event_type == EventTypes.PROGRAM:
 			self.control = 0
 			self.value = param1
@@ -55,7 +56,7 @@ class ParserEvent:
 
 class ParserTrack:
 	def __init__( self, channel: int ):
-		self.events			= []
+		self.events			: List[ParserEvent] = []
 		self.detour_remain	= -1
 		self.ret_pos		= 0
 		self.time_at		= 0
@@ -74,7 +75,7 @@ class ParserTrack:
 class Parser:
 	def __init__( self ):
 		self.next_channel	= 0
-		self.tracks			= []
+		self.tracks			: List[ParserTrack] = []
 
 	def add_track( self ) -> None:
 		self.tracks.append( ParserTrack( self.next_channel ) )
@@ -82,12 +83,12 @@ class Parser:
 
 #-----------------------------------------------------------
 
-def read_int( f: FileIO, width: int, signed: bool ) -> int:
+def read_int( f: BinaryIO, width: int, signed: bool ) -> int:
 	return int.from_bytes( f.read( width ), byteorder = 'big', signed = signed )
 
 #-----------------------------------------------------------
 
-def handle_detour( f: FileIO, track: ParserTrack ) -> None:
+def handle_detour( f: BinaryIO, track: ParserTrack ) -> None:
 	if track.detour_remain > 0:
 		track.detour_remain -= 1
 
@@ -97,8 +98,8 @@ def handle_detour( f: FileIO, track: ParserTrack ) -> None:
 
 #-----------------------------------------------------------
 
-def handle_tempo_fades( track: ParserTrack ) -> None:
-	# number of tempo events so far
+def handle_tempo_fades( f: BinaryIO, track: ParserTrack ) -> None:
+	# number of tempo events encountered+generated so far
 	occurrence = 0
 
 	for event in track.events:
@@ -114,30 +115,32 @@ def handle_tempo_fades( track: ParserTrack ) -> None:
 
 			time = event.time
 
-			step = int( ( event.target - track.tempo ) / event.fade_time )
+			try:
+				step = int( ( event.target - track.tempo ) / event.fade_time )
+			except ZeroDivisionError:
+				sys.exit( "Tempo fade event cannot have fade time of zero (offset = {:08x})".format( event.offset ) )
 
 			if next_tempo == None:
 				for i in range( event.fade_time ):
-					track.events.append( ParserEvent( EventTypes.TEMPO, time + i,
+					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
 						mido.bpm2tempo( track.tempo + ( step * i ) ) ) )
 					
 					occurrence += 1
-				track.events.append( ParserEvent( EventTypes.TEMPO, time + event.fade_time,
+				track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + event.fade_time,
 					mido.bpm2tempo( event.target ) ) )
 			else:
 				num_events = next_tempo.time - ( event.time + event.fade_time )
 
 				for i in range( event.fade_time ):
-					track.events.append( ParserEvent( EventTypes.TEMPO, time + i,
+					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i,
 						mido.bpm2tempo( track.tempo - ( step * i ) ) ) )
 					
 					occurrence += 1
-					
-
 
 #-----------------------------------------------------------
 
-def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
+def parse_subseg_track( f: BinaryIO, track: ParserTrack ) -> None:
+	offset = f.tell()
 	cmd = read_int( f, 1, False )
 	handle_detour( f, track )
 
@@ -165,12 +168,12 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 				handle_detour( f, track )
 				length = ( ( length & ~0xc0 ) << 8 ) + b2 + 0xc0
 
-			track.events.append( ParserEvent( EventTypes.NOTE_ON, track.time_at, note, vel ) )
-			track.events.append( ParserEvent( EventTypes.NOTE_OFF, track.time_at + length, note, vel ) )
+			track.events.append( ParserEvent( EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
+			track.events.append( ParserEvent( EventTypes.NOTE_OFF, offset, track.time_at + length, note, vel ) )
 		# master tempo
 		elif cmd == 0xe0:
 			param1 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO, track.time_at, mido.bpm2tempo( param1 ) ) )
+			track.events.append( ParserEvent( EventTypes.TEMPO, offset, track.time_at, mido.bpm2tempo( param1 ) ) )
 			track.tempo = param1
 		# master volume
 		elif cmd == 0xe1:
@@ -188,7 +191,7 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 		elif cmd == 0xe4:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, track.time_at, param2, param1 ) )
+			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, offset, track.time_at, param2, param1 ) )
 			# TODO: implement
 		# master volume fade
 		elif cmd == 0xe5:
@@ -205,38 +208,41 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 			param1 = read_int( f, 1, False )
 			param2 = read_int( f, 1, False )
 			track.patch_bank = param1
-			track.events.append( ParserEvent( EventTypes.PROGRAM, track.time_at, param1, param2 ) )
+			track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
 		# subtrack volume
 		elif cmd == 0xe9:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, track.time_at, 7, param1 ) )
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 7, param1 ) )
 		# subtrack pan
 		elif cmd == 0xea:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, track.time_at, 10, param1 ) )
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 10, param1 ) )
 		# subtrack reverb event_time ) )
 		elif cmd == 0xeb:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, track.time_at, 91, param1 ) )
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 91, param1 ) )
 		# segment track volume
 		elif cmd == 0xec:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, track.time_at, 11, param1 ) )
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 11, param1 ) )
 		# subtrack coarse tune
 		elif cmd == 0xed:
 			track.coarse_tune = PITCH_STEP_COARSE * read_int( f, 1, True )
-			track.events.append( ParserEvent( EventTypes.WHEEL, track.time_at,
+			track.events.append( ParserEvent(
+				EventTypes.WHEEL, offset, track.time_at,
 				track.coarse_tune + track.fine_tune + track.track_tune ) )
 		# subtrack fine tune
 		elif cmd == 0xee:
 			track.coarse_tune = PITCH_STEP_FINE * read_int( f, 1, True )
-			track.events.append( ParserEvent( EventTypes.WHEEL, track.time_at,
+			track.events.append( ParserEvent(
+				EventTypes.WHEEL, offset, track.time_at,
 				track.coarse_tune + track.fine_tune + track.track_tune ) )
 		# segment track tune
 		elif cmd == 0xef:
 			param1 = read_int( f, 2, True )
 			track.track_tune = param1 / 100 * PITCH_STEP_COARSE
-			track.events.append( ParserEvent( EventTypes.WHEEL, track.time_at,
+			track.events.append( ParserEvent(
+				EventTypes.WHEEL, offset, track.time_at,
 				track.coarse_tune + track.fine_tune + track.track_tune ) )
 		# track tremolo
 		elif cmd == 0xf0:
@@ -260,7 +266,8 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 		# track patch set
 		elif cmd == 0xf5:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.PROGRAM, track.time_at, track.patch_bank, param1 ) )
+			track.events.append( ParserEvent(
+				EventTypes.PROGRAM, offset, track.time_at, track.patch_bank, param1 ) )
 		# track volume fade
 		elif cmd == 0xf6:
 			param1 = read_int( f, 2, False )
@@ -297,6 +304,7 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 			for i in range( cmd_len_table[cmd - 0xe0] ):
 				handle_detour( f, track )
 
+		offset = f.tell()
 		cmd = read_int( f, 1, False )
 		handle_detour( f, track )
 
@@ -327,12 +335,10 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 		if   e.type == EventTypes.NOTE_OFF:
 			m_track.append( mido.Message(
-				'note_off', channel = track.channel, note = e.note,
-				velocity = min( 127, e.velocity ), time = event_time ) )
+				'note_off', channel = track.channel, note = e.note, velocity = e.velocity, time = event_time ) )
 		elif e.type == EventTypes.NOTE_ON:
 			m_track.append( mido.Message(
-				'note_on', channel = track.channel, note = e.note,
-				velocity = min( 127, e.velocity ), time = event_time ) )
+				'note_on', channel = track.channel, note = e.note, velocity = e.velocity, time = event_time ) )
 		elif e.type == EventTypes.CC:
 			m_track.append( mido.Message(
 				'control_change', channel = track.channel, control = e.control, value = e.value, time = event_time ) )
@@ -418,7 +424,7 @@ def main():
 			bin_f.seek( next_track_pos )
 
 	for track in parser.tracks:
-		handle_tempo_fades( track )
+		handle_tempo_fades( bin_f, track )
 		
 		m_track = mido.MidiTrack()
 		mid_f.tracks.append( m_track )
