@@ -25,82 +25,82 @@ class EventTypes( Enum ):
 
 #-----------------------------------------------------------
 
+# Values are the MIDI key and patch number
 drum_map = {
 	# STANDARD 1
-	 0: ( 36,  0 ),
-	 1: ( 38,  0 ),
-	 2: ( 40,  0 ),
-	 3: ( 42,  0 ),
-	 4: ( 44,  0 ),
-	 5: ( 46,  0 ),
-	 6: ( 50,  0 ),
-	 7: ( 48,  0 ),
-	 8: ( 47,  0 ),
-	 9: ( 45,  0 ),
-	10: ( 43,  0 ),
-	11:	( 41,  0 ),
-	12: ( 49,  0 ),
-	13: ( 57,  0 ),
-	14: ( 61,  0 ),
-	15: ( 60,  0 ),
-	16: ( 79,  0 ),
-	17: ( 78,  0 ),
-	18: ( 54,  0 ),
-	19: ( 81,  0 ),
-	20: ( 80,  0 ),
-	21: ( 63,  0 ),
-	22: ( 64,  0 ),
-	23: ( 62,  0 ),
-	24: ( 65,  0 ),
-	25: ( 66,  0 ),
-	26: ( 74,  0 ),
-	27: ( 73,  0 ),
+	 0: ( 36,  0 ), # Std.1 K1
+	 1: ( 38,  0 ), # Std.1 S1
+	 2: ( 40,  0 ), # Std.1 S2
+	 3: ( 42,  0 ), # C.Hi-Hat
+	 4: ( 44,  0 ), # P.Hi-Hat
+	 5: ( 46,  0 ), # O.Hi-hat
+	 6: ( 50,  0 ), # Hi.Tom 1
+	 7: ( 48,  0 ), # Hi.Tom 2
+	 8: ( 47,  0 ), # MidTom 1
+	 9: ( 45,  0 ), # MidTom 2
+	10: ( 43,  0 ), # LowTom 1
+	11:	( 41,  0 ), # LowTom 2
+	12: ( 49,  0 ), # CrshCym1
+	13: ( 57,  0 ), # CrshCym2
+	14: ( 61,  0 ), # LowBongo
+	15: ( 60,  0 ), # Hi.Bongo
+	16: ( 79,  0 ), # Op.Cuica
+	17: ( 78,  0 ), # Mt.Cuica
+	18: ( 54,  0 ), # Tambourn
+	19: ( 81,  0 ), # Op.Trigl
+	20: ( 80,  0 ), # Mt.Trigl
+	21: ( 63,  0 ), # OH Conga
+	22: ( 64,  0 ), # LowConga
+	23: ( 62,  0 ), # MH Conga
+	24: ( 65,  0 ), # Hi.Timbl
+	25: ( 66,  0 ), # LowTimbl
+	26: ( 74,  0 ), # L.Guiro
+	27: ( 73,  0 ), # S.Guiro
 	# ORCHESTRA
-	28: ( 36, 48 ),
-	29: ( 38, 48 ),
+	28: ( 36, 48 ), # Con.BD 1
+	29: ( 38, 48 ), # Con.SD
 	# TR-808
-	30: ( 35, 25 ),
-	31: ( 36, 25 ),
-	32: ( 38, 25 ),
-	33: ( 40, 25 ),
-	34: ( 42, 25 ),
-	35: ( 46, 25 ),
+	30: ( 35, 25 ), # 808 BD2
+	31: ( 36, 25 ), # 808 BD
+	32: ( 38, 25 ), # 808 S1
+	33: ( 40, 25 ), # 808 S2
+	34: ( 42, 25 ), # 808 CHH2
+	35: ( 46, 25 ), # 808 OHH
 	# STANDARD 1
-	36: ( 51,  0 ),
-	37: ( 53,  0 ),
+	36: ( 51,  0 ), # RideCym1
+	37: ( 53,  0 ), # RideBell
 	# ROOM
-	38: ( 36,  8 ),
-	39: ( 36,  8 ),
-	40: ( 38,  8 ),
+	38: ( 36,  8 ), # Room K1
+	39: ( 36,  8 ), # Room K2
+	40: ( 38,  8 ), # Room S1
 	# DANCE
-	41: ( 35, 26 ),
-	42: ( 36, 26 ),
-	43: ( 38, 26 ),
+	41: ( 35, 26 ), # 909 CmpK
+	42: ( 36, 26 ), # Elec.K2
+	43: ( 38, 26 ), # House SD
 	# STANDARD 1
-	44: ( 69,  0 ),
+	44: ( 69,  0 ), # Cabasa
 	# unknown
 	45: ( 26,  0 ),
 	# STANDARD 1
-	46: ( 75,  0 ),
-	47: ( 56,  0 ),
-	48: ( 67,  0 ),
-	49: ( 68,  0 ),
-	50: ( 76,  0 ),
-	51: ( 77,  0 ),
-	52: ( 72,  0 ),
-	53: ( 71,  0 ),
-	54: ( 82,  0 ),
-	55: ( 70,  0 ),
+	46: ( 75,  0 ), # Claves
+	47: ( 56,  0 ), # Cowbell
+	48: ( 67,  0 ), # Hi.Agogo
+	49: ( 68,  0 ), # LowAgogo
+	50: ( 76,  0 ), # Hi.W.Blk
+	51: ( 77,  0 ), # LowW.Blk
+	52: ( 72,  0 ), # LL.Whisl
+	53: ( 71,  0 ), # Sh.Whisl
+	54: ( 82,  0 ), # Shaker
+	55: ( 70,  0 ), # Maracas
 	# ELECTRONIC
-	56: ( 39, 24 ),
+	56: ( 39, 24 ), # HandClap
 	# STANDARD 1
-	57: ( 39,  0 ),
-	58: ( 37,  0 ),
-	59: ( 31,  0 ),
-	60: ( 58,  0 ),
-	# 61-71 appear unused
+	57: ( 39,  0 ), # 909 Clap
+	58: ( 37,  0 ), # Sd.Stick
+	59: ( 31,  0 ), # Sticks
+	60: ( 58,  0 ), # Vib-slap
 	# STANDARD 1
-	72: ( 52,  0 )
+	72: ( 52,  0 ), # Chin.Cym
 }
 
 #-----------------------------------------------------------
@@ -214,7 +214,6 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 				occurrence += 1
 			else:
 				num_events = next_tempo.time - event.time
-				print( num_events )
 
 				for i in range( num_events ):
 					track.events.append( ParserEvent( EventTypes.TEMPO, event.offset, time + i, tempo - ( step * i ) ) )
@@ -222,7 +221,12 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 
 #-----------------------------------------------------------
 
-def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bool ) -> None:
+def parse_subseg_track(
+		f: BinaryIO,
+		parser: Parser,
+		track_num: int,
+		is_drum: bool
+) -> None:
 	track = parser.tracks[track_num]
 
 	offset = f.tell()
@@ -256,15 +260,19 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bo
 			if is_drum:
 				if track.patch != drum_map[note][1]:
 					track.patch = drum_map[note][1]
-					track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, 0, track.patch ) )
+					track.events.append( ParserEvent(
+						EventTypes.PROGRAM, offset, track.time_at, 0, track.patch ) )
 				note = drum_map[note][0]
 
-			track.events.append( ParserEvent( EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
-			track.events.append( ParserEvent( EventTypes.NOTE_OFF, offset, track.time_at + length, note, vel ) )
+			track.events.append( ParserEvent(
+				EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
+			track.events.append( ParserEvent(
+				EventTypes.NOTE_OFF, offset, track.time_at + length, note, vel ) )
 		# master tempo
 		elif cmd == 0xe0:
 			param1 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO, offset, track.time_at, param1 ) )
+			track.events.append( ParserEvent(
+				EventTypes.TEMPO, offset, track.time_at, param1 ) )
 		# master volume
 		elif cmd == 0xe1:
 			param1 = read_int( f, 1, False )
@@ -281,7 +289,8 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bo
 		elif cmd == 0xe4:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 2, False )
-			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, offset, track.time_at, param1, param2 ) )
+			track.events.append( ParserEvent(
+				EventTypes.TEMPO_FADE, offset, track.time_at, param1, param2 ) )
 			# TODO: implement
 		# master volume fade
 		elif cmd == 0xe5:
@@ -299,7 +308,8 @@ def parse_subseg_track( f: BinaryIO, parser: Parser, track_num: int, is_drum: bo
 				param1 = read_int( f, 1, False )
 				param2 = read_int( f, 1, False )
 				track.patch_bank = param1
-				track.events.append( ParserEvent( EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
+				track.events.append( ParserEvent(
+					EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
 		# subtrack volume
 		elif cmd == 0xe9:
 			param1 = read_int( f, 1, False )
@@ -441,8 +451,11 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 			m_track.append( mido.Message(
 				'program_change', channel = track.channel, program = e.program, time = 0 ) )
 		elif e.type == EventTypes.WHEEL:
+			# clamp pitch bend range
+			pitch = max( min( e.pitch, 8191 ), -8192 )
+
 			m_track.append( mido.Message(
-				'pitchwheel', channel = track.channel, pitch = int( e.pitch ), time = event_time ) )
+				'pitchwheel', channel = track.channel, pitch = int( pitch ), time = event_time ) )
 		elif e.type == EventTypes.TEMPO:
 			m_track.append( mido.MetaMessage(
 				'set_tempo', tempo = mido.bpm2tempo( e.tempo ), time = event_time ) )
