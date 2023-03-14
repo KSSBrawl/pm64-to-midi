@@ -63,7 +63,7 @@ class ParserTrack:
 		self.coarse_tune	= 0
 		self.fine_tune		= 0
 		self.track_tune		= 0
-		self.tempo			= 0
+		self.tempo			= 120
 		self.patch_bank		= 0
 
 	def sort_events_by_time( self ) -> None:
@@ -114,12 +114,12 @@ def handle_tempo_fades( track: ParserTrack ) -> None:
 
 			time = event.time
 
-			step = int( ( event.target - track.tempo ) / time )
+			step = int( ( event.target - track.tempo ) / event.fade_time )
 
 			if next_tempo == None:
 				for i in range( event.fade_time ):
 					track.events.append( ParserEvent( EventTypes.TEMPO, time + i,
-						mido.bpm2tempo( track.tempo - ( step * i ) ) ) )
+						mido.bpm2tempo( track.tempo + ( step * i ) ) ) )
 					
 					occurrence += 1
 				track.events.append( ParserEvent( EventTypes.TEMPO, time + event.fade_time, mido.bpm2tempo( event.target ) ) )
