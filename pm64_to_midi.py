@@ -22,6 +22,85 @@ class EventTypes( Enum ):
 	WHEEL		= 4
 	TEMPO		= 5
 	TEMPO_FADE	= 6
+	SYSEX		= 7
+
+#-----------------------------------------------------------
+
+# Values are the MIDI key and patch number
+drum_map = {
+	# STANDARD 1
+	 0: ( 36,  0 ), # Std.1 K1
+	 1: ( 38,  0 ), # Std.1 S1
+	 2: ( 40,  0 ), # Std.1 S2
+	 3: ( 42,  0 ), # C.Hi-Hat
+	 4: ( 44,  0 ), # P.Hi-Hat
+	 5: ( 46,  0 ), # O.Hi-hat
+	 6: ( 50,  0 ), # Hi.Tom 1
+	 7: ( 48,  0 ), # Hi.Tom 2
+	 8: ( 47,  0 ), # MidTom 1
+	 9: ( 45,  0 ), # MidTom 2
+	10: ( 43,  0 ), # LowTom 1
+	11:	( 41,  0 ), # LowTom 2
+	12: ( 49,  0 ), # CrshCym1
+	13: ( 57,  0 ), # CrshCym2
+	14: ( 61,  0 ), # LowBongo
+	15: ( 60,  0 ), # Hi.Bongo
+	16: ( 79,  0 ), # Op.Cuica
+	17: ( 78,  0 ), # Mt.Cuica
+	18: ( 54,  0 ), # Tambourn
+	19: ( 81,  0 ), # Op.Trigl
+	20: ( 80,  0 ), # Mt.Trigl
+	21: ( 63,  0 ), # OH Conga
+	22: ( 64,  0 ), # LowConga
+	23: ( 62,  0 ), # MH Conga
+	24: ( 65,  0 ), # Hi.Timbl
+	25: ( 66,  0 ), # LowTimbl
+	26: ( 74,  0 ), # L.Guiro
+	27: ( 73,  0 ), # S.Guiro
+	# ORCHESTRA
+	28: ( 36, 48 ), # Con.BD 1
+	29: ( 38, 48 ), # Con.SD
+	# TR-808
+	30: ( 35, 25 ), # 808 BD2
+	31: ( 36, 25 ), # 808 BD
+	32: ( 38, 25 ), # 808 S1
+	33: ( 40, 25 ), # 808 S2
+	34: ( 42, 25 ), # 808 CHH2
+	35: ( 46, 25 ), # 808 OHH
+	# STANDARD 1
+	36: ( 51,  0 ), # RideCym1
+	37: ( 53,  0 ), # RideBell
+	# ROOM
+	38: ( 36,  8 ), # Room K1
+	39: ( 36,  8 ), # Room K2
+	40: ( 38,  8 ), # Room S1
+	# DANCE
+	41: ( 35, 26 ), # 909 CmpK
+	42: ( 36, 26 ), # Elec.K2
+	43: ( 38, 26 ), # House SD
+	# STANDARD 1
+	44: ( 69,  0 ), # Cabasa
+	# unknown
+	45: ( 26,  0 ),
+	# STANDARD 1
+	46: ( 75,  0 ), # Claves
+	47: ( 56,  0 ), # Cowbell
+	48: ( 67,  0 ), # Hi.Agogo
+	49: ( 68,  0 ), # LowAgogo
+	50: ( 76,  0 ), # Hi.W.Blk
+	51: ( 77,  0 ), # LowW.Blk
+	52: ( 72,  0 ), # LL.Whisl
+	53: ( 71,  0 ), # Sh.Whisl
+	54: ( 82,  0 ), # Shaker
+	55: ( 70,  0 ), # Maracas
+	# ELECTRONIC
+	56: ( 39, 24 ), # HandClap
+	# STANDARD 1
+	57: ( 39,  0 ), # 909 Clap
+	58: ( 37,  0 ), # Sd.Stick
+	59: ( 31,  0 ), # Sticks
+	60: ( 58,  0 ), # Vib-slap
+}
 
 #-----------------------------------------------------------
 
@@ -117,84 +196,6 @@ drum_ex_map = {
 
 #-----------------------------------------------------------
 
-# Values are the MIDI key and patch number
-drum_map = {
-	# STANDARD 1
-	 0: ( 36,  0 ), # Std.1 K1
-	 1: ( 38,  0 ), # Std.1 S1
-	 2: ( 40,  0 ), # Std.1 S2
-	 3: ( 42,  0 ), # C.Hi-Hat
-	 4: ( 44,  0 ), # P.Hi-Hat
-	 5: ( 46,  0 ), # O.Hi-hat
-	 6: ( 50,  0 ), # Hi.Tom 1
-	 7: ( 48,  0 ), # Hi.Tom 2
-	 8: ( 47,  0 ), # MidTom 1
-	 9: ( 45,  0 ), # MidTom 2
-	10: ( 43,  0 ), # LowTom 1
-	11:	( 41,  0 ), # LowTom 2
-	12: ( 49,  0 ), # CrshCym1
-	13: ( 57,  0 ), # CrshCym2
-	14: ( 61,  0 ), # LowBongo
-	15: ( 60,  0 ), # Hi.Bongo
-	16: ( 79,  0 ), # Op.Cuica
-	17: ( 78,  0 ), # Mt.Cuica
-	18: ( 54,  0 ), # Tambourn
-	19: ( 81,  0 ), # Op.Trigl
-	20: ( 80,  0 ), # Mt.Trigl
-	21: ( 63,  0 ), # OH Conga
-	22: ( 64,  0 ), # LowConga
-	23: ( 62,  0 ), # MH Conga
-	24: ( 65,  0 ), # Hi.Timbl
-	25: ( 66,  0 ), # LowTimbl
-	26: ( 74,  0 ), # L.Guiro
-	27: ( 73,  0 ), # S.Guiro
-	# ORCHESTRA
-	28: ( 36, 48 ), # Con.BD 1
-	29: ( 38, 48 ), # Con.SD
-	# TR-808
-	30: ( 35, 25 ), # 808 BD2
-	31: ( 36, 25 ), # 808 BD
-	32: ( 38, 25 ), # 808 S1
-	33: ( 40, 25 ), # 808 S2
-	34: ( 42, 25 ), # 808 CHH2
-	35: ( 46, 25 ), # 808 OHH
-	# STANDARD 1
-	36: ( 51,  0 ), # RideCym1
-	37: ( 53,  0 ), # RideBell
-	# ROOM
-	38: ( 36,  8 ), # Room K1
-	39: ( 36,  8 ), # Room K2
-	40: ( 38,  8 ), # Room S1
-	# DANCE
-	41: ( 35, 26 ), # 909 CmpK
-	42: ( 36, 26 ), # Elec.K2
-	43: ( 38, 26 ), # House SD
-	# STANDARD 1
-	44: ( 69,  0 ), # Cabasa
-	# unknown
-	45: ( 26,  0 ),
-	# STANDARD 1
-	46: ( 75,  0 ), # Claves
-	47: ( 56,  0 ), # Cowbell
-	48: ( 67,  0 ), # Hi.Agogo
-	49: ( 68,  0 ), # LowAgogo
-	50: ( 76,  0 ), # Hi.W.Blk
-	51: ( 77,  0 ), # LowW.Blk
-	52: ( 72,  0 ), # LL.Whisl
-	53: ( 71,  0 ), # Sh.Whisl
-	54: ( 82,  0 ), # Shaker
-	55: ( 70,  0 ), # Maracas
-	# ELECTRONIC
-	56: ( 39, 24 ), # HandClap
-	# STANDARD 1
-	57: ( 39,  0 ), # 909 Clap
-	58: ( 37,  0 ), # Sd.Stick
-	59: ( 31,  0 ), # Sticks
-	60: ( 58,  0 ), # Vib-slap
-}
-
-#-----------------------------------------------------------
-
 class ParserEvent:
 	def __init__( self, event_type: int, offset: int, time: int, param1: int, param2: int = None ):
 		self.type = event_type
@@ -221,6 +222,8 @@ class ParserEvent:
 		elif event_type == EventTypes.TEMPO_FADE:
 			self.fade_time = param1
 			self.target = param2
+		elif event_type == EventTypes.SYSEX:
+			self.data = param1
 
 #-----------------------------------------------------------
 
@@ -234,6 +237,7 @@ class ParserTrack:
 		self.coarse_tune	= 0
 		self.fine_tune		= 0
 		self.track_tune		= 0
+		self.drum_active	= None
 		self.patch_bank		= 0
 		self.patch			= None
 
@@ -311,18 +315,26 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 
 #-----------------------------------------------------------
 
-def parse_subseg_track(
-		f: BinaryIO,
-		parser: Parser,
-		track_num: int,
-		is_drum: bool
-) -> None:
-	track = parser.tracks[track_num]
-
+def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None:
 	offset = f.tell()
+
 	cmd = read_int( f, 1, False )
 	handle_detour( f, track )
 
+	# handle sysex for normal/drum mode
+	if is_drum != track.drum_active:
+		track.drum_active = is_drum
+
+		if is_drum:
+			# set Part Mode to Drum1
+			track.events.append( ParserEvent( 
+				EventTypes.SYSEX, 0, track.time_at, ( 0x40, 0x10 | track.channel + 1, 0x15, 0x01 ) ) )
+		else:
+			# set Part Mode to Norm
+			track.events.append( ParserEvent( 
+				EventTypes.SYSEX, 0, track.time_at, ( 0x40, 0x10 | track.channel + 1, 0x15, 0x00 ) ) )
+
+	# parse commands
 	while cmd != 0:
 		# delta time
 		if cmd < 0x80:
@@ -348,11 +360,16 @@ def parse_subseg_track(
 				length = ( ( length & ~0xc0 ) << 8 ) + b2 + 0xc0
 
 			if is_drum:
-				if track.patch != drum_map[note][1]:
-					track.patch = drum_map[note][1]
+				try:
+					params = drum_map[note]
+				except KeyError:
+					sys.exit( 'EX drum {:02x} is not yet added! Let KSS know about this'.format( note ) )
+
+				if track.patch != params[1]:
+					track.patch = params[1]
 					track.events.append( ParserEvent(
 						EventTypes.PROGRAM, offset, track.time_at, 0, track.patch ) )
-				note = drum_map[note][0]
+				note = params[0]
 
 			track.events.append( ParserEvent(
 				EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
@@ -496,6 +513,7 @@ def parse_subseg_track(
 				handle_detour( f, track )
 
 		offset = f.tell()
+
 		cmd = read_int( f, 1, False )
 		handle_detour( f, track )
 
@@ -549,6 +567,12 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 		elif e.type == EventTypes.TEMPO:
 			m_track.append( mido.MetaMessage(
 				'set_tempo', tempo = mido.bpm2tempo( e.tempo ), time = event_time ) )
+		elif e.type == EventTypes.SYSEX:
+			checksum = 128 - ( sum( e.data ) % 128 )
+			data = ( 0x41, 0x10, 0x42, 0x12 ) + e.data + ( checksum, )
+			
+			m_track.append( mido.Message( 
+				'sysex', data = data, time = event_time ) )
 
 		delta_time = e.time
 
@@ -632,10 +656,8 @@ def main():
 		sub_ofs += seg_ofs
 		bin_f.seek( sub_ofs )
 
-		for i in range( 16 ):
-			track = parser.tracks[i]
-
-			track_ofs = read_int( bin_f, 2, False ) + sub_ofs
+		for track in parser.tracks:
+			track_ofs = read_int( bin_f, 2, False )
 
 			track_flags = read_int( bin_f, 2, False )
 			is_drum = track_flags & 0x0080 != 0 and args.translate_drums == True	
@@ -643,10 +665,12 @@ def main():
 			if track_ofs == 0:
 				continue
 
+			track_ofs += sub_ofs
+
 			next_track_pos = bin_f.tell()
 			bin_f.seek( track_ofs )
 
-			parse_subseg_track( bin_f, parser, i, is_drum )
+			parse_subseg_track( bin_f, track, is_drum )
 			track.sort_events_by_time()
 
 			bin_f.seek( next_track_pos )
