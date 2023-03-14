@@ -21,6 +21,7 @@ class EventTypes( Enum ):
 	PROGRAM		= 3
 	WHEEL		= 4
 	TEMPO		= 5
+	TEMPO_FADE	= 6
 
 #-----------------------------------------------------------
 
@@ -46,6 +47,9 @@ class ParserEvent:
 			self.pitch = param1
 		elif event_type == EventTypes.TEMPO:
 			self.tempo = param1
+		elif event_type == EventTypes.TEMPO_FADE:
+			self.target = param1
+			self.fade_time = param2
 
 #-----------------------------------------------------------
 
@@ -60,9 +64,6 @@ class ParserTrack:
 		self.fine_tune		= 0
 		self.track_tune		= 0
 		self.tempo			= 0
-		self.tempo_target	= 0
-		self.tempo_step		= 0
-		self.tempo_time		= 0
 		self.patch_bank		= 0
 
 	def sort_events_by_time( self ) -> None:
@@ -93,6 +94,45 @@ def handle_detour( f: FileIO, track: ParserTrack ) -> None:
 	if track.detour_remain == 0:
 		f.seek( track.ret_pos )
 		track.detour_remain = -1
+
+#-----------------------------------------------------------
+
+def handle_tempo_fades( track: ParserTrack ) -> None:
+	# number of tempo events so far
+	occurrence = 0
+
+	for event in track.events:
+		if event.type == EventTypes.TEMPO:
+			occurrence += 1
+
+		if event.type == EventTypes.TEMPO_FADE:
+			next_tempo = None
+			try:
+				next_tempo = [i for i, e in enumerate( track.events ) if e.type == EventTypes.TEMPO][occurrence]
+			except IndexError:
+				pass
+
+			time = event.time
+
+			step = int( ( event.target - track.tempo ) / time )
+
+			if next_tempo == None:
+				for i in range( event.fade_time ):
+					track.events.append( ParserEvent( EventTypes.TEMPO, time + i,
+						mido.bpm2tempo( track.tempo - ( step * i ) ) ) )
+					
+					occurrence += 1
+				track.events.append( ParserEvent( EventTypes.TEMPO, time + event.fade_time, mido.bpm2tempo( event.target ) ) )
+			else:
+				num_events = next_tempo.time - ( event.time + event.fade_time )
+
+				for i in range( event.fade_time ):
+					track.events.append( ParserEvent( EventTypes.TEMPO, time + i,
+						mido.bpm2tempo( track.tempo - ( step * i ) ) ) )
+					
+					occurrence += 1
+					
+
 
 #-----------------------------------------------------------
 
@@ -130,6 +170,7 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 		elif cmd == 0xe0:
 			param1 = read_int( f, 2, False )
 			track.events.append( ParserEvent( EventTypes.TEMPO, track.time_at, mido.bpm2tempo( param1 ) ) )
+			track.tempo = param1
 		# master volume
 		elif cmd == 0xe1:
 			param1 = read_int( f, 1, False )
@@ -146,6 +187,7 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 		elif cmd == 0xe4:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 2, False )
+			track.events.append( ParserEvent( EventTypes.TEMPO_FADE, track.time_at, param2, param1 ) )
 			# TODO: implement
 		# master volume fade
 		elif cmd == 0xe5:
@@ -192,7 +234,7 @@ def parse_subseg_track( f: FileIO, track: ParserTrack ) -> None:
 		# segment track tune
 		elif cmd == 0xef:
 			param1 = read_int( f, 2, True )
-			track.track_tune = param1 / 100
+			track.track_tune = param1 / 100 * PITCH_STEP_COARSE
 			track.events.append( ParserEvent( EventTypes.WHEEL, track.time_at,
 				track.coarse_tune + track.fine_tune + track.track_tune ) )
 		# track tremolo
@@ -283,10 +325,10 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 		if   e.type == EventTypes.NOTE_OFF:
 			m_track.append( mido.Message(
-				'note_off', channel = track.channel, note = e.note, velocity = e.velocity, time = event_time ) )
+				'note_off', channel = track.channel, note = e.note, velocity = min( 127, e.velocity ), time = event_time ) )
 		elif e.type == EventTypes.NOTE_ON:
 			m_track.append( mido.Message(
-				'note_on', channel = track.channel, note = e.note, velocity = e.velocity, time = event_time ) )
+				'note_on', channel = track.channel, note = e.note, velocity = min( 127, e.velocity ), time = event_time ) )
 		elif e.type == EventTypes.CC:
 			m_track.append( mido.Message(
 				'control_change', channel = track.channel, control = e.control, value = e.value, time = event_time ) )
