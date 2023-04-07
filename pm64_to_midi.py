@@ -114,7 +114,7 @@ drum_ex_map = {
 
 	0xb0: ( 36,  0 ), # Std.1 K1
 	0xb1: ( 38,  0 ), # Std.1 S1
-	0xb2: ( 40,  0 ), # Std.1
+	0xb2: ( 40,  0 ), # Std.1 S2
 	0xb3: ( 42,  0 ), # C.Hi-Hat
 	0xb4: ( 44,  0 ), # P.Hi-Hat
 	0xb5: ( 46,  0 ), # O.Hi-Hat
@@ -291,11 +291,8 @@ def handle_tempo_fades( f: BinaryIO, parser: Parser, track_num: int ) -> None:
 				pass
 
 			time = event.time
-
-			try:
-				step = int( ( event.target - tempo ) / event.fade_time )
-			except ZeroDivisionError:
-				sys.exit( "Tempo fade event cannot have fade time of zero (offset = {:08x})".format( event.offset ) )
+			fade_time = 1 if event.fade_time <= 0 else event.fade_time
+			step = int( ( event.target - tempo ) / fade_time )
 
 			if next_tempo == None:
 				for i in range( event.fade_time ):
@@ -344,14 +341,15 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 			# short delta time
 			else:
 				track.time_at += cmd
-		# note
+		# note event
 		elif cmd < 0xd4:
-			note	= cmd & 0x7f
-			vel		= read_int( f, 1, False )
+			note   = cmd & 0x7f
+			vel    = read_int( f, 1, False )
 			handle_detour( f, track )
-			length	= read_int( f, 1, False )
+			length = read_int( f, 1, False )
 			handle_detour( f, track )
 
+			# long length
 			if length >= 0xc0:
 				b2 = read_int( f, 1, False )
 				handle_detour( f, track )
@@ -423,7 +421,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 		elif cmd == 0xea:
 			param1 = read_int( f, 1, False )
 			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 10, param1 ) )
-		# subtrack reverb event_time ) )
+		# subtrack reverb
 		elif cmd == 0xeb:
 			param1 = read_int( f, 1, False )
 			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 91, param1 ) )
@@ -558,6 +556,9 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 				'program_change', channel = track.channel, program = e.program, time = 0 ) )
 		elif e.type == EventTypes.WHEEL:
 			# clamp pitch bend range
+			if e.pitch > 8191 or e.pitch < -8192:
+				print( 'WARNING: pitch event at 0x{:04x} exceeds +/-24 semitones'.format( e.offset ) )
+
 			pitch = max( min( e.pitch, 8191 ), -8192 )
 
 			m_track.append( mido.Message(
@@ -580,26 +581,18 @@ def main():
 	args = argparse.ArgumentParser()
 
 	args.add_argument(
-		'-t', '--translate_drums',
-		action = 'store_true',
+		'-t', '--translate-drums', action = 'store_true',
 		help = 'translate drum mapping to GS drum mapping' )
 	args.add_argument(
-		'-i', '--in',
-		dest = 'in_file',
-		help = 'BGM file name',
-		required = True )
+		'-i', '--in', dest = 'in_file',
+		help = 'BGM file name', required = True )
 	args.add_argument(
-		'-s', '--segment',
-		dest = 'segment',
-		type = int,
-		choices = range( 0, 4 ),
-		help = 'segment ID (0-3)',
-		required = True )
+		'-s', '--segment', dest = 'segment',
+		type = int, choices = range( 0, 4 ),
+		help = 'segment ID (0-3)', required = True )
 	args.add_argument(
-		'-o', '--out',
-		dest = 'out_file',
-		help = 'MIDI file name',
-		required = True )
+		'-o', '--out', dest = 'out_file',
+		help = 'MIDI file name', required = True )
 
 	args = args.parse_args()
 
@@ -620,7 +613,10 @@ def main():
 	for i in range( drums_cnt ):
 		# dummy read
 		read_int( bin_f, 1, False )
-		drum_info = drum_ex_map[read_int( bin_f, 1, False )]
+		sample = read_int( bin_f, 1, False )
+		if not sample in drum_ex_map:
+			sys.exit( 'EX drum {:02x} is not yet added! Let KSS know about this'.format( sample ) )
+		drum_info = drum_ex_map[sample]
 		drum_map[72 + i] = drum_info
 		# dummy read
 		read_int( bin_f, 10, False )
