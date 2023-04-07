@@ -248,12 +248,31 @@ class ParserTrack:
 
 class Parser:
 	def __init__( self ):
-		self.next_channel	= 0
+		self.next_channel		= 0
+		self.next_empty_drum	= 72
 		self.tracks			: List[ParserTrack] = []
 
 	def add_track( self ) -> None:
 		self.tracks.append( ParserTrack( self.next_channel ) )
 		self.next_channel += 1
+
+	def add_drum( self, sample ) -> None:
+		if self.next_empty_drum > 100:
+			sys.exit( "Exceeded drum_limit" )
+
+		if not sample in drum_ex_map:
+			note = self.next_empty_drum - 72
+
+			print( 'Translation of EX drum {:02X} is not supported yet'.format( sample ) )
+			print( 'Will default to MIDI note {:d}'.format( note ) )
+
+			drum_map[self.next_empty_drum] = ( note, 0 )
+		else:
+			drum_info = drum_ex_map[sample]
+			drum_map[self.next_empty_drum] = drum_info
+
+		self.next_empty_drum += 1
+		
 
 #-----------------------------------------------------------
 
@@ -608,24 +627,21 @@ def main():
 	drums_ofs = read_int( bin_f, 2, False ) << 2
 	drums_cnt = read_int( bin_f, 2, False )
 
+	if seg_ofs == 0:
+		sys.exit( 'Requested segment does not exist' )
+
+	parser = Parser()
+
 	bin_f.seek( drums_ofs )
 
 	for i in range( drums_cnt ):
 		# dummy read
 		read_int( bin_f, 1, False )
-		sample = read_int( bin_f, 1, False )
-		if not sample in drum_ex_map:
-			sys.exit( 'EX drum {:02x} is not yet added! Let KSS know about this'.format( sample ) )
-		drum_info = drum_ex_map[sample]
-		drum_map[72 + i] = drum_info
+
+		parser.add_drum( read_int( bin_f, 1, False ) )
+		
 		# dummy read
 		read_int( bin_f, 10, False )
-
-
-	if seg_ofs == 0:
-		sys.exit( 'Requested segment does not exist' )
-
-	parser = Parser()
 
 	for i in range( 16 ):
 		parser.add_track()
