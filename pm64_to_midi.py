@@ -378,7 +378,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 				try:
 					params = drum_map[note]
 				except KeyError:
-					sys.exit( 'EX drum {:02x} is not yet added! Let KSS know about this'.format( note ) )
+					sys.exit( 'Drum {:d} is not in translation map'.format( note ) )
 
 				if track.patch != params[1]:
 					track.patch = params[1]
