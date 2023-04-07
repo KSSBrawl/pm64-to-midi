@@ -196,6 +196,10 @@ drum_ex_map = {
 
 #-----------------------------------------------------------
 
+patch_ex_map = {}
+
+#-----------------------------------------------------------
+
 class ParserEvent:
 	def __init__( self, event_type: int, offset: int, time: int, param1: int, param2: int = None ):
 		self.type = event_type
@@ -249,8 +253,8 @@ class ParserTrack:
 class Parser:
 	def __init__( self ):
 		self.next_channel		= 0
+		self.tracks				: List[ParserTrack] = []
 		self.next_empty_drum	= 72
-		self.tracks			: List[ParserTrack] = []
 
 	def add_track( self ) -> None:
 		self.tracks.append( ParserTrack( self.next_channel ) )
@@ -424,7 +428,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 			param1 = read_int( f, 1, False )
 			param2 = read_int( f, 1, False )
 			# TODO: implement
-		# track patch+bank set
+		# track patch+bank override
 		elif cmd == 0xe8:
 			if not is_drum:
 				param1 = read_int( f, 1, False )
@@ -489,8 +493,10 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 		# track patch set
 		elif cmd == 0xf5:
 			param1 = read_int( f, 1, False )
+
+			bank_patch = patch_ex_map[param1]
 			track.events.append( ParserEvent(
-				EventTypes.PROGRAM, offset, track.time_at, track.patch_bank, param1 ) )
+				EventTypes.PROGRAM, offset, track.time_at, bank_patch[0], bank_patch[1] ) )
 		# track volume fade
 		elif cmd == 0xf6:
 			param1 = read_int( f, 2, False )
@@ -598,6 +604,7 @@ def track2midi( track: ParserTrack, m_track = mido.MidiTrack ) -> None:
 
 def main():
 	args = argparse.ArgumentParser()
+	parser = Parser()
 
 	args.add_argument(
 		'-t', '--translate-drums', action = 'store_true',
@@ -619,7 +626,11 @@ def main():
 	mid_f = mido.MidiFile( type = 1 )
 	mid_f.ticks_per_beat = 48
 
+	# ------------------------------------------------
+	# read from BGMFileInfo
+
 	bin_f.seek( 0x14 + ( args.segment << 1 ) )
+
 	seg_ofs = read_int( bin_f, 2, False ) << 2
 	seg_pos = seg_ofs
 
@@ -627,10 +638,14 @@ def main():
 	drums_ofs = read_int( bin_f, 2, False ) << 2
 	drums_cnt = read_int( bin_f, 2, False )
 
+	patch_ofs = read_int( bin_f, 2, False ) << 2
+	patch_cnt = read_int( bin_f, 2, False )
+
 	if seg_ofs == 0:
 		sys.exit( 'Requested segment does not exist' )
 
-	parser = Parser()
+	# ------------------------------------------------
+	# load EX drum data
 
 	bin_f.seek( drums_ofs )
 
@@ -642,6 +657,22 @@ def main():
 		
 		# dummy read
 		read_int( bin_f, 10, False )
+
+	# ------------------------------------------------
+	# load EX patch data
+
+	bin_f.seek( patch_ofs )
+
+	for i in range( patch_cnt ):
+		bank	= read_int( bin_f, 1, False )
+		patch	= read_int( bin_f, 1, False )
+		patch_ex_map[i] = ( bank, patch )
+
+		# dummy read
+		read_int( bin_f, 6, False )
+
+	# ------------------------------------------------
+	# begin track data parsing
 
 	for i in range( 16 ):
 		parser.add_track()
