@@ -240,7 +240,7 @@ class ParserTrack:
 		self.channel		= channel
 		self.coarse_tune	= 0
 		self.fine_tune		= 0
-		self.track_tune		= 0
+		self.tuning			= 0
 		self.drum_active	= None
 		self.patch_bank		= 0
 		self.patch			= None
@@ -394,7 +394,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 				EventTypes.NOTE_ON, offset, track.time_at, note, vel ) )
 			track.events.append( ParserEvent(
 				EventTypes.NOTE_OFF, offset, track.time_at + length, note, vel ) )
-		# master tempo
+		# tempo
 		elif cmd == 0xe0:
 			param1 = read_int( f, 2, False )
 			track.events.append( ParserEvent(
@@ -411,7 +411,7 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 		elif cmd == 0xe3:
 			param1 = read_int( f, 1, False )
 			# TODO: implement
-		# master tempo fade
+		# tempo fade
 		elif cmd == 0xe4:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 2, False )
@@ -436,41 +436,41 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 				track.patch_bank = param1
 				track.events.append( ParserEvent(
 					EventTypes.PROGRAM, offset, track.time_at, param1, param2 ) )
-		# subtrack volume
+		# track subvolume
 		elif cmd == 0xe9:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 7, param1 ) )
-		# subtrack pan
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 11, param1 ) )
+		# track pan
 		elif cmd == 0xea:
 			param1 = read_int( f, 1, False )
 			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 10, param1 ) )
-		# subtrack reverb
+		# track reverb
 		elif cmd == 0xeb:
 			param1 = read_int( f, 1, False )
 			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 91, param1 ) )
-		# segment track volume
+		# track volume
 		elif cmd == 0xec:
 			param1 = read_int( f, 1, False )
-			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at, 11, param1 ) )
-		# subtrack coarse tune
+			track.events.append( ParserEvent( EventTypes.CC, offset, track.time_at,  7, param1 ) )
+		# track coarse subtuning
 		elif cmd == 0xed:
 			track.coarse_tune = PITCH_STEP_COARSE * read_int( f, 1, True )
 			track.events.append( ParserEvent(
 				EventTypes.WHEEL, offset, track.time_at,
-				track.coarse_tune + track.fine_tune + track.track_tune ) )
-		# subtrack fine tune
+				track.coarse_tune + track.fine_tune + track.tuning ) )
+		# track fine subtuning
 		elif cmd == 0xee:
 			track.coarse_tune = PITCH_STEP_FINE * read_int( f, 1, True )
 			track.events.append( ParserEvent(
 				EventTypes.WHEEL, offset, track.time_at,
-				track.coarse_tune + track.fine_tune + track.track_tune ) )
-		# segment track tune
+				track.coarse_tune + track.fine_tune + track.tuning ) )
+		# track tuning
 		elif cmd == 0xef:
 			param1 = read_int( f, 2, True )
-			track.track_tune = param1 / 100 * PITCH_STEP_COARSE
+			track.tuning = param1 / 100 * PITCH_STEP_COARSE
 			track.events.append( ParserEvent(
 				EventTypes.WHEEL, offset, track.time_at,
-				track.coarse_tune + track.fine_tune + track.track_tune ) )
+				track.coarse_tune + track.fine_tune + track.tuning ) )
 		# track tremolo
 		elif cmd == 0xf0:
 			param1 = read_int( f, 1, False )
@@ -497,12 +497,12 @@ def parse_subseg_track( f: BinaryIO, track: ParserTrack, is_drum: bool ) -> None
 			bank_patch = patch_ex_map[param1]
 			track.events.append( ParserEvent(
 				EventTypes.PROGRAM, offset, track.time_at, bank_patch[0], bank_patch[1] ) )
-		# track volume fade
+		# track subvolume fade
 		elif cmd == 0xf6:
 			param1 = read_int( f, 2, False )
 			param2 = read_int( f, 1, False )
 			# TODO: implement
-		# subtrack reverb type
+		# track reverb type
 		elif cmd == 0xf7:
 			param1 = read_int( f, 1, False )
 			# TODO: implement
